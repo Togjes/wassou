@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résultats des Votes - HOMINI(E)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            color: #1a2a6c;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            color: #b21f1f;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        
+        .results-table {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+        
+        .table-header {
+            display: grid;
+            grid-template-columns: 50px 1fr 100px 120px 100px;
+            background-color: #1a2a6c;
+            color: white;
+            font-weight: bold;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        
+        .candidate-row {
+            display: grid;
+            grid-template-columns: 50px 1fr 100px 120px 100px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+        
+        .candidate-row:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .candidate-row:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        
+        .candidate-row:nth-child(even):hover {
+            background-color: #f0f0f0;
+        }
+        
+        .rank {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #1a2a6c;
+            text-align: center;
+        }
+        
+        .name {
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+        
+        .votes, .percentage {
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .votes {
+            color: #b21f1f;
+        }
+        
+        .percentage {
+            color: #1a2a6c;
+        }
+        
+        .party {
+            text-align: center;
+            font-weight: bold;
+            color: #fdbb2d;
+            background-color: rgba(253, 187, 45, 0.1);
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        
+        .highlight {
+            background-color: rgba(253, 187, 45, 0.2);
+            font-weight: bold;
+        }
+        
+        .summary {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+        
+        .summary h2 {
+            color: #1a2a6c;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #fdbb2d;
+            padding-bottom: 5px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-item {
+            background-color: rgba(26, 42, 108, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #1a2a6c;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .table-header, .candidate-row {
+                grid-template-columns: 40px 1fr 80px 80px 80px;
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .table-header, .candidate-row {
+                grid-template-columns: 30px 1fr 60px 70px 60px;
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+            
+            .rank {
+                font-size: 1rem;
+            }
+            
+            .name {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HOMINI(E)</h1>
+            <p class="subtitle">Résultats des votes</p>
+        </header>
+        
+        <div class="results-table">
+            <div class="table-header">
+                <div>Rang</div>
+                <div>Candidat</div>
+                <div>Votes</div>
+                <div>Pourcentage</div>
+                <div>Parti</div>
+            </div>
+            
+            <div class="candidate-row highlight">
+                <div class="rank">1</div>
+                <div class="name">CHISIBI Merry</div>
+                <div class="votes">4,066</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">2</div>
+                <div class="name">HOUSNOU Leela Franck Adjinen</div>
+                <div class="votes">2,877</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">3</div>
+                <div class="name">NOUNASSOU Jonas Red</div>
+                <div class="votes">2,845</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">4</div>
+                <div class="name">AHOKONGBE Donside Emmanuel</div>
+                <div class="votes">2,090</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">5</div>
+                <div class="name">EZONII Sephura</div>
+                <div class="votes">2,071</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">6</div>
+                <div class="name">DOUBOGAN Gabin</div>
+                <div class="votes">1,477</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">7</div>
+                <div class="name">KOSSEJJA Mahesi</div>
+                <div class="votes">1,388</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">8</div>
+                <div class="name">RADOHOUN Kupashim, <ZTOMARINKOWAZMAN></div>
+                <div class="votes">1,276</div>
+                <div class="percentage">5.44%</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">9</div>
+                <div class="name">CON Virgisha</div>
+                <div class="votes">1,246</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">10</div>
+                <div class="name">CODA Marie Vicente</div>
+                <div class="votes">809</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">11</div>
+                <div class="name">GRAGIUDI Casniri</div>
+                <div class="votes">792</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">12</div>
+                <div class="name">BYLL CATARIA Henri</div>
+                <div class="votes">665</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">13</div>
+                <div class="name">AGIRLA Emile</div>
+                <div class="votes">649</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">14</div>
+                <div class="name">HODONOU Senami Sandra</div>
+                <div class="votes">646</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">15</div>
+                <div class="name">GABA Happy Kafoul</div>
+                <div class="votes">308</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+            
+            <div class="candidate-row">
+                <div class="rank">16</div>
+                <div class="name">DOSSOU - YONO Onche</div>
+                <div class="votes">275</div>
+                <div class="percentage">-</div>
+                <div class="party">FIMAL</div>
+            </div>
+        </div>
+        
+        <div class="summary">
+            <h2>Résumé des résultats</h2>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value">16</div>
+                    <div class="stat-label">Candidats</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">23,485</div>
+                    <div class="stat-label">Votes totaux</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">1</div>
+                    <div class="stat-label">Parti représenté</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">4,066</div>
+                    <div class="stat-label">Meilleur score</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('locataires', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('user_id');
+            $table->text('adresse_actuelle')->nullable();
+            $table->string('profession', 100)->nullable();
+            $table->decimal('salaire_mensuel', 12, 2)->nullable();
+            $table->string('mobile_money_number', 20)->nullable();
+            $table->json('contact_urgence')->nullable();
+            $table->text('signature_locataire_url')->nullable();
+            $table->date('created_at');
+            $table->date('updated_at')->nullable();
+            $table->date('deleted_at')->nullable();
+
+            // Clé étrangère
+            $table->foreign('user_id')
+                  ->references('id')
+                  ->on('users')
+                  ->onDelete('cascade');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('locataires');
+    }
+};
