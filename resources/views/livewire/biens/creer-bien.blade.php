@@ -45,9 +45,10 @@
                         @endif
 
                         <!-- Section recherche propriétaire (Admin et Démarcheur uniquement) -->
+                        <!-- Dans la section recherche propriétaire (Admin et Démarcheur uniquement) -->
                         @if((Auth::user()->isAdmin() || Auth::user()->isDemarcheur()) && !$isEdit)
-                            <div class="card mb-4 {{ $proprietaire_trouve ? 'border-success' : 'border-warning' }}">
-                                <div class="card-header {{ $proprietaire_trouve ? 'bg-light-success' : 'bg-light-warning' }}">
+                            <div class="card mb-4 {{ $proprietaire_trouve && $demarcheur_autorise ? 'border-success' : ($proprietaire_trouve ? 'border-warning' : 'border-info') }}">
+                                <div class="card-header {{ $proprietaire_trouve && $demarcheur_autorise ? 'bg-light-success' : ($proprietaire_trouve ? 'bg-light-warning' : 'bg-light-info') }}">
                                     <h6 class="mb-0">
                                         <i class="fa-solid fa-user-tie me-2"></i>
                                         Sélection du Propriétaire
@@ -59,9 +60,9 @@
                                             <div class="col-md-8">
                                                 <label class="form-label">Code Unique du Propriétaire <span class="txt-danger">*</span></label>
                                                 <input type="text" 
-                                                       wire:model="code_proprietaire" 
-                                                       class="form-control @error('code_proprietaire') is-invalid @enderror"
-                                                       placeholder="Ex: PROP-XXXXX">
+                                                    wire:model="code_proprietaire" 
+                                                    class="form-control @error('code_proprietaire') is-invalid @enderror"
+                                                    placeholder="Ex: PROP-XXXXX">
                                                 @error('code_proprietaire')
                                                     <div class="invalid-feedback d-block">
                                                         <i class="fa-solid fa-exclamation-circle me-1"></i>{{ $message }}
@@ -94,13 +95,23 @@
                                             <div>
                                                 <h6 class="mb-1">{{ $proprietaire_selectionne->user->name }}</h6>
                                                 <p class="mb-0 text-muted">
-                                                    <i class="fa-solid fa-phone me-2"></i>{{ $proprietaire_selectionne->telephone }}
+                                                    <i class="fa-solid fa-phone me-2"></i>{{ $proprietaire_selectionne->user->phone }}
                                                 </p>
                                                 <p class="mb-0 text-muted">
                                                     <i class="fa-solid fa-envelope me-2"></i>{{ $proprietaire_selectionne->user->email }}
                                                 </p>
                                                 <p class="mb-0">
-                                                    <span class="badge badge-success">Code: {{ $proprietaire_selectionne->user->code_unique }}</span>
+                                                    <span class="badge badge-info">Code: {{ $proprietaire_selectionne->user->code_unique }}</span>
+                                                    
+                                                    @if($demarcheur_autorise)
+                                                        <span class="badge badge-success ms-2">
+                                                            <i class="fa-solid fa-check-circle me-1"></i>Autorisé
+                                                        </span>
+                                                    @else
+                                                        <span class="badge badge-danger ms-2">
+                                                            <i class="fa-solid fa-times-circle me-1"></i>Non autorisé
+                                                        </span>
+                                                    @endif
                                                 </p>
                                             </div>
                                             <button type="button" 
@@ -116,6 +127,22 @@
                                                 {{ session('success_search') }}
                                             </div>
                                         @endif
+
+                                        @if(session()->has('error_search'))
+                                            <div class="alert alert-danger mt-3 mb-0">
+                                                <i class="fa-solid fa-exclamation-circle me-2"></i>
+                                                {{ session('error_search') }}
+                                            </div>
+                                        @endif
+
+                                        <!-- Message d'aide pour le démarcheur non autorisé -->
+                                        @if(!$demarcheur_autorise && Auth::user()->isDemarcheur())
+                                            <div class="alert alert-warning mt-3 mb-0">
+                                                <i class="fa-solid fa-info-circle me-2"></i>
+                                                <strong>Action requise :</strong> Vous devez être autorisé par ce propriétaire avant de pouvoir créer des biens pour lui. 
+                                                Veuillez contacter <strong>{{ $proprietaire_selectionne->user->name }}</strong> et lui demander de vous ajouter comme gestionnaire depuis son espace.
+                                            </div>
+                                        @endif
                                     @endif
                                 </div>
                             </div>
@@ -125,7 +152,7 @@
                         @if(Auth::user()->isProprietaire() && !$isEdit)
                             <div class="alert alert-info mb-4">
                                 <i class="fa-solid fa-info-circle me-2"></i>
-                                <strong>Création pour :</strong> {{ Auth::user()->name }}
+                                <strong>Création pour :</strong> {{ Auth::user()->last_name }} {{ Auth::user()->first_name }}
                             </div>
                         @endif
 

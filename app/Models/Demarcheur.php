@@ -30,7 +30,7 @@ class Demarcheur extends Model
         'deleted_at' => 'datetime',
     ];
 
-    // Relations
+    // Relations existantes
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -41,7 +41,76 @@ class Demarcheur extends Model
         return $this->hasMany(ContratLocation::class);
     }
 
-    // Scopes
+    // NOUVELLES RELATIONS POUR LES PROPRIÉTAIRES
+    
+    /**
+     * Relation Many-to-Many avec les propriétaires
+     */
+    public function proprietaires()
+    {
+        return $this->belongsToMany(
+            Proprietaire::class,
+            'proprietaire_demarcheur',
+            'demarcheur_id',
+            'proprietaire_id'
+        )
+        ->using(ProprietaireDemarcheur::class)
+        ->withPivot(['statut', 'permissions', 'demande_initiee_par', 'date_validation', 'notes'])
+        ->withTimestamps();
+    }
+
+    /**
+     * Propriétaires actifs uniquement
+     */
+    public function proprietairesActifs()
+    {
+        return $this->proprietaires()->wherePivot('statut', 'actif');
+    }
+
+    /**
+     * Vérifier si le démarcheur est autorisé pour un propriétaire
+     */
+    public function isAuthorizedFor($proprietaireId)
+    {
+        return $this->proprietairesActifs()
+            ->where('proprietaires.id', $proprietaireId)
+            ->exists();
+    }
+
+    /**
+     * Vérifier une permission spécifique pour un propriétaire
+     */
+    public function hasPermissionFor($proprietaireId, $permission)
+    {
+        $relation = $this->proprietaires()
+            ->where('proprietaires.id', $proprietaireId)
+            ->wherePivot('statut', 'actif')
+            ->first();
+
+        if (!$relation) {
+            return false;
+        }
+
+        $permissions = $relation->pivot->permissions;
+        
+        if (empty($permissions)) {
+            return true;
+        }
+
+        return in_array($permission, $permissions);
+    }
+
+    /**
+     * Obtenir tous les biens des propriétaires gérés
+     */
+    public function biensGeres()
+    {
+        $proprietaireIds = $this->proprietairesActifs()->pluck('proprietaires.id');
+        
+        return BienImmobilier::whereIn('proprietaire_id', $proprietaireIds);
+    }
+
+    // Scopes existants
     public function scopeActive($query)
     {
         return $query->where('is_active', true)
@@ -50,7 +119,7 @@ class Demarcheur extends Model
             });
     }
 
-    // Accesseurs
+    // Accesseurs existants
     public function getFullNameAttribute()
     {
         return $this->user->first_name . ' ' . $this->user->last_name;
@@ -63,7 +132,6 @@ class Demarcheur extends Model
 
     public function getCommissionsGagneesAttribute()
     {
-        // Calculer les commissions à partir des paiements de type commission
         return $this->contratsLocation()
             ->with('paiements')
             ->get()
@@ -71,5 +139,17 @@ class Demarcheur extends Model
             ->where('type_paiement', 'commission')
             ->where('statut', 'paye')
             ->sum('montant');
+    }
+
+    // NOUVEAUX ACCESSEURS
+    
+    public function getTotalProprietairesAttribute()
+    {
+        return $this->proprietairesActifs()->count();
+    }
+
+    public function getTotalBiensGeresAttribute()
+    {
+        return $this->biensGeres()->count();
     }
 }

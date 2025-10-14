@@ -68,6 +68,24 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}', \App\Livewire\Utilisateurs\DetailUtilisateur::class)->name('detail');
     });
 
+
+
+
+    // Routes pour les propriétaires
+Route::middleware(['auth', 'role:proprietaire'])->group(function () {
+    Route::get('/proprietaire/demarcheurs', \App\Livewire\Proprietaire\GererDemarcheurs::class)
+        ->name('proprietaire.demarcheurs');
+});
+
+// Routes pour les démarcheurs
+Route::middleware(['auth', 'role:demarcheur'])->group(function () {
+    Route::get('/demarcheur/proprietaires', \App\Livewire\Demarcheur\MesProprietaires::class)
+        ->name('demarcheur.proprietaires');
+});
+
+
+
+
     // Routes Contrats - Tous sauf Locataire basique
     // Route::prefix('contrats')->name('contrats.')->middleware('auth')->group(function () {
     //     Route::get('/', \App\Livewire\Contrats\ListeContrats::class)->name('liste');

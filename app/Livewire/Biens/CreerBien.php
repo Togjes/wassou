@@ -18,10 +18,11 @@ class CreerBien extends Component
     public $bienId = null;
     public $isEdit = false;
 
-    // Pour l'admin : sélection du propriétaire
+    // Pour l'admin/démarcheur : sélection du propriétaire
     public $code_proprietaire = '';
     public $proprietaire_selectionne = null;
     public $proprietaire_trouve = false;
+    public $demarcheur_autorise = false; // NOUVEAU
 
     // Étape 1 : Informations de base + Caractéristiques
     public $description = '';
@@ -90,22 +91,30 @@ class CreerBien extends Component
 
     public function mount($id = null)
     {
+        $user = Auth::user();
+
         if ($id) {
             $this->bienId = $id;
             $this->isEdit = true;
             $this->loadBien();
         } else {
-            $user = Auth::user();
-            
             if ($user->isProprietaire() && $user->proprietaire) {
                 $this->proprietaire_selectionne = $user->proprietaire;
                 $this->proprietaire_trouve = true;
+                $this->demarcheur_autorise = true; // Propriétaire lui-même
                 $this->ville = $user->ville;
                 $this->mobile_money_number = $user->proprietaire->mobile_money_number;
             }
             
-            if ($user->isAdmin() || $user->isDemarcheur()) {
+            if ($user->isAdmin()) {
+                // Admin a tous les droits, pas besoin de vérifier l'autorisation
                 $this->proprietaire_trouve = false;
+                $this->demarcheur_autorise = true; // Admin peut créer pour tous
+            }
+
+            if ($user->isDemarcheur()) {
+                $this->proprietaire_trouve = false;
+                $this->demarcheur_autorise = false; // Sera vérifié après sélection
             }
         }
     }
@@ -118,23 +127,62 @@ class CreerBien extends Component
 
         $user = \App\Models\User::where('code_unique', $this->code_proprietaire)->first();
 
-        if ($user && $user->hasRole('proprietaire')) {
-            $this->proprietaire_selectionne = $user->proprietaire;
-            $this->proprietaire_trouve = true;
-            
-            $this->ville = $user->ville ?? '';
-            $this->mobile_money_number = $user->proprietaire->mobile_money_number ?? '';
-            
-            session()->flash('success_search', 'Propriétaire trouvé : ' . $user->name);
-        } elseif ($user && !$user->hasRole('proprietaire')) {
-            $this->proprietaire_trouve = false;
-            $this->proprietaire_selectionne = null;
-            session()->flash('error_search', "Cet utilisateur (Code: {$user->code_unique}) n'est pas un propriétaire.");
-        } else {
-            $this->proprietaire_trouve = false;
-            $this->proprietaire_selectionne = null;
-            session()->flash('error_search', 'Aucun utilisateur trouvé avec ce code.');
+        if (!$user) {
+            $this->resetSelection('Aucun utilisateur trouvé avec ce code.');
+            return;
         }
+
+        if (!$user->hasRole('proprietaire')) {
+            $this->resetSelection("Cet utilisateur (Code: {$user->code_unique}) n'est pas un propriétaire.");
+            return;
+        }
+
+        // Propriétaire trouvé
+        $this->proprietaire_selectionne = $user->proprietaire;
+        $this->proprietaire_trouve = true;
+
+        $currentUser = Auth::user();
+
+        // Vérifier les autorisations
+        if ($currentUser->isAdmin()) {
+            // Admin autorisé pour tous
+            $this->demarcheur_autorise = true;
+            $this->chargerDonneesProprietaire();
+            session()->flash('success_search', 'Propriétaire trouvé : ' . $user->name);
+        } 
+        elseif ($currentUser->isDemarcheur()) {
+            // Vérifier si le démarcheur est autorisé pour ce propriétaire
+            $demarcheur = $currentUser->demarcheur;
+            
+            if ($demarcheur->isAuthorizedFor($this->proprietaire_selectionne->id)) {
+                // Vérifier la permission spécifique de créer un bien
+                if ($demarcheur->hasPermissionFor($this->proprietaire_selectionne->id, 'creer_bien')) {
+                    $this->demarcheur_autorise = true;
+                    $this->chargerDonneesProprietaire();
+                    session()->flash('success_search', 'Propriétaire trouvé : ' . $user->name . ' - Vous êtes autorisé.');
+                } else {
+                    $this->demarcheur_autorise = false;
+                    session()->flash('error_search', 'Vous n\'avez pas la permission de créer un bien pour ce propriétaire.');
+                }
+            } else {
+                $this->demarcheur_autorise = false;
+                session()->flash('error_search', 'Vous n\'êtes pas autorisé à gérer les biens de ce propriétaire. Veuillez contacter le propriétaire pour obtenir l\'autorisation.');
+            }
+        }
+    }
+
+    protected function chargerDonneesProprietaire()
+    {
+        $this->ville = $this->proprietaire_selectionne->user->ville ?? '';
+        $this->mobile_money_number = $this->proprietaire_selectionne->mobile_money_number ?? '';
+    }
+
+    protected function resetSelection($message)
+    {
+        $this->proprietaire_trouve = false;
+        $this->proprietaire_selectionne = null;
+        $this->demarcheur_autorise = false;
+        session()->flash('error_search', $message);
     }
 
     public function resetProprietaire()
@@ -142,6 +190,7 @@ class CreerBien extends Component
         $this->code_proprietaire = '';
         $this->proprietaire_selectionne = null;
         $this->proprietaire_trouve = false;
+        $this->demarcheur_autorise = false;
         $this->reset(['ville', 'mobile_money_number']);
     }
 
@@ -150,8 +199,24 @@ class CreerBien extends Component
         $bien = BienImmobilier::findOrFail($this->bienId);
         
         $user = Auth::user();
-        if (!$user->isAdmin() && $bien->proprietaire->user_id !== $user->id) {
-            abort(403, 'Accès non autorisé');
+        
+        // Vérifier les droits d'accès
+        if ($user->isProprietaire()) {
+            if ($bien->proprietaire->user_id !== $user->id) {
+                abort(403, 'Accès non autorisé');
+            }
+            $this->demarcheur_autorise = true;
+        } 
+        elseif ($user->isDemarcheur()) {
+            $demarcheur = $user->demarcheur;
+            if (!$demarcheur->isAuthorizedFor($bien->proprietaire_id) || 
+                !$demarcheur->hasPermissionFor($bien->proprietaire_id, 'modifier_bien')) {
+                abort(403, 'Vous n\'êtes pas autorisé à modifier ce bien');
+            }
+            $this->demarcheur_autorise = true;
+        }
+        elseif ($user->isAdmin()) {
+            $this->demarcheur_autorise = true;
         }
 
         $this->proprietaire_selectionne = $bien->proprietaire;
@@ -189,6 +254,12 @@ class CreerBien extends Component
 
     public function nextStep()
     {
+        // Vérifier l'autorisation avant de passer à l'étape suivante
+        if (!$this->demarcheur_autorise && !Auth::user()->isAdmin()) {
+            session()->flash('error', 'Vous devez sélectionner un propriétaire autorisé avant de continuer.');
+            return;
+        }
+
         $this->validateCurrentStep();
         $this->currentStep++;
     }
@@ -219,12 +290,10 @@ class CreerBien extends Component
                     'photos_generales.*' => 'nullable|image|max:5120',
                 ];
                 
-                // Validation conditionnelle pour Mobile Money
                 if (in_array('mobile_money', $this->moyens_paiement_acceptes)) {
                     $rules['mobile_money_number'] = 'required|string|regex:/^\+?[0-9\s]{10,15}$/';
                 }
                 
-                // Validation conditionnelle pour Virement Bancaire
                 if (in_array('virement', $this->moyens_paiement_acceptes)) {
                     $rules['bank_name'] = 'required|string|max:100';
                     $rules['bank_account_number'] = 'required|string|min:10|max:50';
@@ -239,10 +308,16 @@ class CreerBien extends Component
     {
         $user = Auth::user();
 
-        // Vérifier que le propriétaire est sélectionné pour admin et démarcheur
-        if (($user->isAdmin() || $user->isDemarcheur()) && !$this->proprietaire_selectionne) {
+        // VÉRIFICATION STRICTE DES AUTORISATIONS
+        if (!$this->demarcheur_autorise) {
+            session()->flash('error', 'Vous n\'êtes pas autorisé à effectuer cette action.');
+            return;
+        }
+
+        // Vérifier que le propriétaire est sélectionné
+        if (!$this->proprietaire_selectionne) {
             session()->flash('error', 'Veuillez sélectionner un propriétaire avant de créer le bien.');
-            $this->currentStep = 1; // Retour à l'étape 1 pour voir le message
+            $this->currentStep = 1;
             return;
         }
 
@@ -257,12 +332,10 @@ class CreerBien extends Component
             'statut' => 'required|in:Location,Construction,Renovation',
         ];
 
-        // Validation conditionnelle pour Mobile Money
         if (in_array('mobile_money', $this->moyens_paiement_acceptes)) {
             $rules['mobile_money_number'] = 'required|string|regex:/^\+?[0-9\s]{10,15}$/';
         }
 
-        // Validation conditionnelle pour Virement Bancaire
         if (in_array('virement', $this->moyens_paiement_acceptes)) {
             $rules['bank_name'] = 'required|string|max:100';
             $rules['bank_account_number'] = 'required|string|min:10|max:50';
@@ -342,7 +415,7 @@ class CreerBien extends Component
                 'titre' => $this->isEdit ? 'Bien immobilier modifié' : 'Bien immobilier créé',
                 'message' => $this->isEdit 
                     ? "Votre bien '{$bien->titre}' a été modifié avec succès."
-                    : "Un nouveau bien '{$bien->titre}' a été créé pour vous.",
+                    : "Un nouveau bien '{$bien->titre}' a été créé pour vous par " . $user->name . ".",
                 'type' => 'systeme',
                 'reference_id' => $bien->id,
                 'reference_type' => 'bien_immobilier',

@@ -47,9 +47,10 @@
                         <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
 
                         <!-- Section recherche propriétaire (Admin et Démarcheur uniquement) -->
+                        <!-- Dans la section recherche propriétaire (Admin et Démarcheur uniquement) -->
                         <!--[if BLOCK]><![endif]--><?php if((Auth::user()->isAdmin() || Auth::user()->isDemarcheur()) && !$isEdit): ?>
-                            <div class="card mb-4 <?php echo e($proprietaire_trouve ? 'border-success' : 'border-warning'); ?>">
-                                <div class="card-header <?php echo e($proprietaire_trouve ? 'bg-light-success' : 'bg-light-warning'); ?>">
+                            <div class="card mb-4 <?php echo e($proprietaire_trouve && $demarcheur_autorise ? 'border-success' : ($proprietaire_trouve ? 'border-warning' : 'border-info')); ?>">
+                                <div class="card-header <?php echo e($proprietaire_trouve && $demarcheur_autorise ? 'bg-light-success' : ($proprietaire_trouve ? 'bg-light-warning' : 'bg-light-info')); ?>">
                                     <h6 class="mb-0">
                                         <i class="fa-solid fa-user-tie me-2"></i>
                                         Sélection du Propriétaire
@@ -61,8 +62,8 @@
                                             <div class="col-md-8">
                                                 <label class="form-label">Code Unique du Propriétaire <span class="txt-danger">*</span></label>
                                                 <input type="text" 
-                                                       wire:model="code_proprietaire" 
-                                                       class="form-control <?php $__errorArgs = ['code_proprietaire'];
+                                                    wire:model="code_proprietaire" 
+                                                    class="form-control <?php $__errorArgs = ['code_proprietaire'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -70,7 +71,7 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>"
-                                                       placeholder="Ex: PROP-XXXXX">
+                                                    placeholder="Ex: PROP-XXXXX">
                                                 <!--[if BLOCK]><![endif]--><?php $__errorArgs = ['code_proprietaire'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -112,7 +113,7 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                                             <div>
                                                 <h6 class="mb-1"><?php echo e($proprietaire_selectionne->user->name); ?></h6>
                                                 <p class="mb-0 text-muted">
-                                                    <i class="fa-solid fa-phone me-2"></i><?php echo e($proprietaire_selectionne->telephone); ?>
+                                                    <i class="fa-solid fa-phone me-2"></i><?php echo e($proprietaire_selectionne->user->phone); ?>
 
                                                 </p>
                                                 <p class="mb-0 text-muted">
@@ -120,7 +121,17 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
 
                                                 </p>
                                                 <p class="mb-0">
-                                                    <span class="badge badge-success">Code: <?php echo e($proprietaire_selectionne->user->code_unique); ?></span>
+                                                    <span class="badge badge-info">Code: <?php echo e($proprietaire_selectionne->user->code_unique); ?></span>
+                                                    
+                                                    <!--[if BLOCK]><![endif]--><?php if($demarcheur_autorise): ?>
+                                                        <span class="badge badge-success ms-2">
+                                                            <i class="fa-solid fa-check-circle me-1"></i>Autorisé
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="badge badge-danger ms-2">
+                                                            <i class="fa-solid fa-times-circle me-1"></i>Non autorisé
+                                                        </span>
+                                                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                                 </p>
                                             </div>
                                             <button type="button" 
@@ -137,6 +148,23 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
 
                                             </div>
                                         <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+
+                                        <!--[if BLOCK]><![endif]--><?php if(session()->has('error_search')): ?>
+                                            <div class="alert alert-danger mt-3 mb-0">
+                                                <i class="fa-solid fa-exclamation-circle me-2"></i>
+                                                <?php echo e(session('error_search')); ?>
+
+                                            </div>
+                                        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+
+                                        <!-- Message d'aide pour le démarcheur non autorisé -->
+                                        <!--[if BLOCK]><![endif]--><?php if(!$demarcheur_autorise && Auth::user()->isDemarcheur()): ?>
+                                            <div class="alert alert-warning mt-3 mb-0">
+                                                <i class="fa-solid fa-info-circle me-2"></i>
+                                                <strong>Action requise :</strong> Vous devez être autorisé par ce propriétaire avant de pouvoir créer des biens pour lui. 
+                                                Veuillez contacter <strong><?php echo e($proprietaire_selectionne->user->name); ?></strong> et lui demander de vous ajouter comme gestionnaire depuis son espace.
+                                            </div>
+                                        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                     <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                                 </div>
                             </div>
@@ -146,7 +174,7 @@ unset($__errorArgs, $__bag); ?><!--[if ENDBLOCK]><![endif]-->
                         <!--[if BLOCK]><![endif]--><?php if(Auth::user()->isProprietaire() && !$isEdit): ?>
                             <div class="alert alert-info mb-4">
                                 <i class="fa-solid fa-info-circle me-2"></i>
-                                <strong>Création pour :</strong> <?php echo e(Auth::user()->name); ?>
+                                <strong>Création pour :</strong> <?php echo e(Auth::user()->last_name); ?> <?php echo e(Auth::user()->first_name); ?>
 
                             </div>
                         <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
