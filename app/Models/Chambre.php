@@ -168,4 +168,48 @@ class Chambre extends Model
 
         return null;
     }
+    /**
+ * Vérifier si la chambre a un contrat actif
+ */
+public function hasActiveContract()
+{
+    return $this->contrats()
+        ->whereIn('statut', ['actif', 'en_attente'])
+        ->exists();
+}
+
+/**
+ * Obtenir le contrat actif de la chambre
+ */
+public function getActiveContract()
+{
+    return $this->contrats()
+        ->whereIn('statut', ['actif', 'en_attente'])
+        ->latest()
+        ->first();
+}
+
+/**
+ * Relation avec les contrats
+ */
+// public function contrats()
+// {
+//     return $this->hasMany(ContratLocation::class, 'chambre_id');
+// }
+
+/**
+ * Accesseur pour savoir si la chambre est sous contrat
+ */
+public function getEstSousContratAttribute()
+{
+    return $this->hasActiveContract();
+}
+
+/**
+ * Accesseur pour le contrat actif
+ */
+public function getContratActifAttribute()
+{
+    return $this->getActiveContract();
+}
 }

@@ -12,10 +12,10 @@
         }
 
         body {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-family: "Inter", sans-serif;
             font-size: 11pt;
             line-height: 1.6;
-            color: #333;
+            color: #000;
             padding: 20px;
         }
 
@@ -23,19 +23,19 @@
             text-align: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 3px solid #2c3e50;
+            border-bottom: 2px solid #000;
         }
 
         .header h1 {
-            color: #2c3e50;
-            font-size: 24pt;
+            font-size: 20pt;
             margin-bottom: 10px;
+            font-weight: 600;
         }
 
         .header .numero {
-            color: #e74c3c;
-            font-size: 14pt;
-            font-weight: bold;
+            font-size: 12pt;
+            font-weight: 600;
+            margin-bottom: 5px;
         }
 
         .section {
@@ -43,58 +43,53 @@
         }
 
         .section-title {
-            background-color: #2c3e50;
-            color: white;
-            padding: 10px;
-            font-size: 14pt;
-            font-weight: bold;
+            padding: 8px 0;
+            font-size: 12pt;
+            font-weight: 600;
             margin-bottom: 15px;
+            border-bottom: 1px solid #000;
         }
 
         .info-row {
             display: table;
             width: 100%;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .info-label {
             display: table-cell;
             width: 35%;
-            font-weight: bold;
-            color: #555;
+            font-weight: 500;
         }
 
         .info-value {
             display: table-cell;
             width: 65%;
-            color: #222;
         }
 
         .partie {
-            background-color: #ecf0f1;
-            padding: 15px;
+            padding: 12px;
             margin-bottom: 15px;
-            border-left: 4px solid #3498db;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
         }
 
         .partie-title {
-            font-size: 13pt;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 10px;
+            font-size: 11pt;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
         .bien-info {
-            background-color: #e8f5e9;
-            padding: 15px;
+            padding: 12px;
             margin-bottom: 15px;
-            border-left: 4px solid #4caf50;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
         }
 
         .montant {
-            font-size: 13pt;
-            font-weight: bold;
-            color: #e74c3c;
+            font-size: 11pt;
+            font-weight: 600;
         }
 
         table {
@@ -104,24 +99,21 @@
         }
 
         table th {
-            background-color: #34495e;
-            color: white;
-            padding: 10px;
+            background-color: #f0f0f0;
+            padding: 8px;
             text-align: left;
-            font-size: 11pt;
+            font-size: 10pt;
+            font-weight: 600;
+            border: 1px solid #ddd;
         }
 
         table td {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        table tr:nth-child(even) {
-            background-color: #f9f9f9;
+            padding: 8px;
+            border: 1px solid #ddd;
         }
 
         .signature-section {
-            margin-top: 50px;
+            margin-top: 40px;
             page-break-inside: avoid;
         }
 
@@ -129,9 +121,9 @@
             display: inline-block;
             width: 48%;
             vertical-align: top;
-            padding: 15px;
-            border: 2px solid #2c3e50;
-            min-height: 120px;
+            padding: 12px;
+            border: 1px solid #000;
+            min-height: 100px;
         }
 
         .signature-box:first-child {
@@ -139,14 +131,13 @@
         }
 
         .signature-label {
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 10px;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
         .signature-name {
-            font-weight: bold;
-            margin-top: 50px;
+            font-weight: 600;
+            margin-top: 40px;
             border-top: 1px solid #000;
             padding-top: 5px;
             text-align: center;
@@ -154,26 +145,22 @@
 
         .footer {
             margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #2c3e50;
+            padding-top: 15px;
+            border-top: 1px solid #000;
             text-align: center;
             font-size: 9pt;
-            color: #777;
+            color: #555;
         }
 
         .status-badge {
             display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 10pt;
-            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 9pt;
+            font-weight: 600;
             text-transform: uppercase;
+            border: 1px solid #000;
         }
-
-        .status-actif { background-color: #27ae60; color: white; }
-        .status-brouillon { background-color: #95a5a6; color: white; }
-        .status-en_attente { background-color: #f39c12; color: white; }
-        .status-resilie { background-color: #e74c3c; color: white; }
 
         .text-right {
             text-align: right;
@@ -188,18 +175,17 @@
         }
 
         .clause {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             text-align: justify;
         }
 
         .clause-title {
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 5px;
+            font-weight: 600;
+            margin-bottom: 4px;
         }
 
         @page {
-            margin: 20mm;
+            margin: 15mm;
         }
     </style>
 </head>
@@ -208,11 +194,11 @@
     <div class="header">
         <h1>CONTRAT DE LOCATION</h1>
         <div class="numero">{{ $contrat->numero_contrat }}</div>
-        <div style="margin-top: 10px;">
+        <div style="margin-top: 8px;">
             Date d'établissement : {{ $contrat->date_etablissement->format('d/m/Y') }}
         </div>
         <div style="margin-top: 5px;">
-            <span class="status-badge status-{{ $contrat->statut }}">
+            <span class="status-badge">
                 {{ strtoupper(str_replace('_', ' ', $contrat->statut)) }}
             </span>
         </div>
@@ -396,11 +382,11 @@
         <div class="signature-box">
             <div class="signature-label">Le Bailleur</div>
             @if($contrat->date_signature_proprietaire)
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 8px;">
                     Signé le {{ $contrat->date_signature_proprietaire->format('d/m/Y à H:i') }}
                 </div>
             @else
-                <div style="margin-top: 10px; color: #e74c3c;">
+                <div style="margin-top: 8px;">
                     En attente de signature
                 </div>
             @endif
@@ -412,11 +398,11 @@
         <div class="signature-box">
             <div class="signature-label">Le Preneur</div>
             @if($contrat->date_signature_locataire)
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 8px;">
                     Signé le {{ $contrat->date_signature_locataire->format('d/m/Y à H:i') }}
                 </div>
             @else
-                <div style="margin-top: 10px; color: #e74c3c;">
+                <div style="margin-top: 8px;">
                     En attente de signature
                 </div>
             @endif

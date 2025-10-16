@@ -34,7 +34,7 @@ class DetailChambre extends Component
         
         // Vérifier l'accès au bien
         if (!$this->hasAccessToBien()) {
-            abort(403, 'Accès non autorisé');
+            abort(403, 'Accès non autorisé à ce bien');
         }
 
         $this->chambre = Chambre::with(['contrats' => function($query) {
@@ -91,7 +91,22 @@ class DetailChambre extends Component
         if ($user->isDemarcheur() && $user->demarcheur) {
             $demarcheur = $user->demarcheur;
             $this->canEdit = $demarcheur->hasPermissionFor($this->bien->proprietaire_id, 'modifier_chambre');
-            $this->canDelete = $demarcheur->hasPermissionFor($this->bien->proprietaire_id, 'supprimer_bien');
+            
+            // Pour supprimer une chambre, on vérifie soit 'supprimer_bien' soit on donne le droit si vide
+            $permissions = $demarcheur->proprietaires()
+                ->where('proprietaires.id', $this->bien->proprietaire_id)
+                ->first();
+            
+            if ($permissions) {
+                $permsList = $permissions->pivot->permissions;
+                // Si pas de permissions définies (null ou vide), tout est autorisé
+                if (empty($permsList)) {
+                    $this->canDelete = true;
+                } else {
+                    // Sinon vérifier la permission spécifique
+                    $this->canDelete = in_array('supprimer_bien', $permsList);
+                }
+            }
         }
     }
 

@@ -100,13 +100,90 @@ class CreerChambre extends Component
 
     public function loadBien()
     {
-        $this->bien = BienImmobilier::findOrFail($this->bienId);
+        $this->bien = BienImmobilier::with('proprietaire.user')->findOrFail($this->bienId);
         
         // Vérifier les permissions
-        $user = Auth::user();
-        if (!$user->isAdmin() && $this->bien->proprietaire->user_id !== $user->id) {
+        if (!$this->hasAccessToBien()) {
             abort(403, 'Accès non autorisé');
         }
+
+        // Vérifier les permissions spécifiques
+        if ($this->isEdit && !$this->canEditChambre()) {
+            abort(403, 'Vous n\'avez pas la permission de modifier des chambres pour ce bien');
+        }
+
+        if (!$this->isEdit && !$this->canCreateChambre()) {
+            abort(403, 'Vous n\'avez pas la permission de créer des chambres pour ce bien');
+        }
+    }
+
+    /**
+     * Vérifier si l'utilisateur a accès au bien
+     */
+    private function hasAccessToBien()
+    {
+        $user = Auth::user();
+        
+        // Admin a accès à tout
+        if ($user->isAdmin()) {
+            return true;
+        }
+        
+        // Propriétaire a accès à ses biens
+        if ($user->isProprietaire() && $this->bien->proprietaire->user_id === $user->id) {
+            return true;
+        }
+        
+        // Démarcheur a accès aux biens des propriétaires qu'il gère
+        if ($user->isDemarcheur() && $user->demarcheur) {
+            return $user->demarcheur->isAuthorizedFor($this->bien->proprietaire_id);
+        }
+        
+        return false;
+    }
+
+    /**
+     * Vérifier si l'utilisateur peut créer une chambre
+     */
+    private function canCreateChambre()
+    {
+        $user = Auth::user();
+        
+        if ($user->isAdmin()) {
+            return true;
+        }
+        
+        if ($user->isProprietaire() && $this->bien->proprietaire->user_id === $user->id) {
+            return true;
+        }
+        
+        if ($user->isDemarcheur()) {
+            return $user->demarcheur->hasPermissionFor($this->bien->proprietaire_id, 'creer_chambre');
+        }
+        
+        return false;
+    }
+
+    /**
+     * Vérifier si l'utilisateur peut modifier une chambre
+     */
+    private function canEditChambre()
+    {
+        $user = Auth::user();
+        
+        if ($user->isAdmin()) {
+            return true;
+        }
+        
+        if ($user->isProprietaire() && $this->bien->proprietaire->user_id === $user->id) {
+            return true;
+        }
+        
+        if ($user->isDemarcheur()) {
+            return $user->demarcheur->hasPermissionFor($this->bien->proprietaire_id, 'modifier_chambre');
+        }
+        
+        return false;
     }
 
     public function loadChambre()
@@ -140,6 +217,17 @@ class CreerChambre extends Component
 
     public function saveChambre()
     {
+        // Vérification finale des permissions
+        if ($this->isEdit && !$this->canEditChambre()) {
+            session()->flash('error', 'Vous n\'avez pas la permission de modifier cette chambre.');
+            return;
+        }
+
+        if (!$this->isEdit && !$this->canCreateChambre()) {
+            session()->flash('error', 'Vous n\'avez pas la permission de créer une chambre pour ce bien.');
+            return;
+        }
+
         $rules = [
             'nom_chambre' => [
                 'required',
@@ -207,8 +295,10 @@ class CreerChambre extends Component
 
             $chambre->save();
 
-            // Notification
             $user = Auth::user();
+            $proprietaireId = $this->bien->proprietaire->user_id;
+
+            // Notification pour l'utilisateur qui a créé/modifié
             \App\Models\Notification::create([
                 'user_id' => $user->id,
                 'titre' => $this->isEdit ? 'Chambre modifiée' : 'Chambre créée',
@@ -219,6 +309,20 @@ class CreerChambre extends Component
                 'reference_id' => $chambre->id,
                 'reference_type' => 'chambre',
             ]);
+
+            // Notification pour le propriétaire si c'est un admin/démarcheur qui a créé/modifié
+            if (($user->isAdmin() || $user->isDemarcheur()) && $proprietaireId !== $user->id) {
+                \App\Models\Notification::create([
+                    'user_id' => $proprietaireId,
+                    'titre' => $this->isEdit ? 'Chambre modifiée' : 'Chambre créée',
+                    'message' => $this->isEdit
+                        ? "{$user->name} a modifié la chambre '{$chambre->nom_chambre}' dans votre bien."
+                        : "{$user->name} a créé la chambre '{$chambre->nom_chambre}' dans votre bien.",
+                    'type' => 'systeme',
+                    'reference_id' => $chambre->id,
+                    'reference_type' => 'chambre',
+                ]);
+            }
 
             DB::commit();
 
@@ -231,6 +335,13 @@ class CreerChambre extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Une erreur est survenue : ' . $e->getMessage());
+            
+            logger()->error('Erreur création/modification chambre', [
+                'error' => $e->getMessage(),
+                'bien_id' => $this->bienId,
+                'chambre_id' => $this->chambreId ?? null,
+                'user_id' => Auth::id()
+            ]);
         }
     }
 

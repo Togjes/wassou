@@ -9,6 +9,9 @@ body{
   line-height: 1.2;
   color: gray !important;
 }
+.page-title h3 {
+  font-size: 20px !important;
+}
 .card-body label{
-    color: gray !important;
+    color: #808080 !important;
 }

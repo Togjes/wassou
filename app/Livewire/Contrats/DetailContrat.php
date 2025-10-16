@@ -23,6 +23,23 @@ class DetailContrat extends Component
         $this->loadContrat();
     }
 
+    // public function loadContrat()
+    // {
+    //     $this->contrat = ContratLocation::with([
+    //         'chambre.bien.proprietaire.user',
+    //         'locataire.user',
+    //         'proprietaire.user',
+    //         'demarcheur.user',
+    //         'paiements' => function($query) {
+    //             $query->latest();
+    //         },
+    //         'avances',
+    //         'etatsLieux',
+    //         'etatLieuxEntree',
+    //         'etatLieuxSortie'
+    //     ])->findOrFail($this->contratId);
+    // }
+
     public function loadContrat()
     {
         $this->contrat = ContratLocation::with([
@@ -38,6 +55,43 @@ class DetailContrat extends Component
             'etatLieuxEntree',
             'etatLieuxSortie'
         ])->findOrFail($this->contratId);
+        // dd($this->contrat);
+        
+        // Vérifier les permissions d'accès au contrat
+        $this->checkAccessPermissions();
+    }
+
+    /**
+     * Vérifier si l'utilisateur a accès au contrat
+     */
+    private function checkAccessPermissions()
+    {
+        $user = Auth::user();
+        
+        // Admin a accès à tout
+        if ($user->isAdmin()) {
+            return;
+        }
+        
+        // Propriétaire a accès à ses contrats
+        if ($user->isProprietaire() && $this->contrat->proprietaire->user_id === $user->id) {
+            return;
+        }
+        
+        // Locataire a accès à son contrat
+        if ($user->isLocataire() && $this->contrat->locataire->user_id === $user->id) {
+            return;
+        }
+        
+        // Démarcheur a accès aux contrats des propriétaires qu'il gère
+        if ($user->isDemarcheur() && $user->demarcheur) {
+            if ($user->demarcheur->isAuthorizedFor($this->contrat->proprietaire_id)) {
+                return;
+            }
+        }
+        
+        // Si aucune condition n'est remplie, refuser l'accès
+        abort(403, 'Vous n\'avez pas accès à ce contrat.');
     }
 
     public function openSignatureModal($type)

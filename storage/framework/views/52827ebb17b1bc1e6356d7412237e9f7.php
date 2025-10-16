@@ -32,7 +32,7 @@
 
                     <!-- Dashboard -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('dashboard*') ? 'active' : ''); ?>" 
                            href="<?php echo e(route('dashboard')); ?>">
                             <svg class="stroke-icon">
@@ -55,7 +55,7 @@
 
                     <!-- Utilisateurs -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title <?php echo e(request()->routeIs('utilisateurs*') ? 'active' : ''); ?>" href="#">
                             <svg class="stroke-icon">
                                 <use href="<?php echo e(asset('assets/svg/icon-sprite.svg#stroke-user')); ?>"></use>
@@ -77,7 +77,7 @@
 
                     <!-- Biens Immobiliers -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title <?php echo e(request()->routeIs('biens*') ? 'active' : ''); ?>" href="#">
                             <svg class="stroke-icon">
                                 <use href="<?php echo e(asset('assets/svg/icon-sprite.svg#stroke-home')); ?>"></use>
@@ -99,7 +99,7 @@
 
                     <!-- Contrats -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title <?php echo e(request()->routeIs('contrats*') ? 'active' : ''); ?>" href="#">
                             <svg class="stroke-icon">
                                 <use href="<?php echo e(asset('assets/svg/icon-sprite.svg#stroke-file-text')); ?>"></use>
@@ -131,7 +131,7 @@
 
                     <!-- Mes Biens -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title <?php echo e(request()->routeIs('biens*') ? 'active' : ''); ?>" href="#">
                             <svg class="stroke-icon">
                                 <use href="<?php echo e(asset('assets/svg/icon-sprite.svg#stroke-home')); ?>"></use>
@@ -153,7 +153,7 @@
 
                     <!-- Mes Contrats -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title <?php echo e(request()->routeIs('contrats*') ? 'active' : ''); ?>" href="#">
                             <svg class="stroke-icon">
                                 <use href="<?php echo e(asset('assets/svg/icon-sprite.svg#stroke-file-text')); ?>"></use>
@@ -175,7 +175,7 @@
 
                     <!-- Mes Démarcheurs -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('proprietaire.demarcheurs') ? 'active' : ''); ?>" 
                            href="<?php echo e(route('proprietaire.demarcheurs')); ?>">
                             <svg class="stroke-icon">
@@ -202,7 +202,7 @@
                     
                     <!-- Mon Contrat -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('contrats*') ? 'active' : ''); ?>" 
                            href="<?php echo e(route('contrats.liste')); ?>">
                             <svg class="stroke-icon">
@@ -217,7 +217,7 @@
 
                     <!-- Mes Paiements -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('paiements*') ? 'active' : ''); ?>" 
                            href="#">
                             <svg class="stroke-icon">
@@ -232,7 +232,7 @@
 
                     <!-- Mes Réclamations -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('reclamations*') ? 'active' : ''); ?>" 
                            href="#">
                             <svg class="stroke-icon">
@@ -249,7 +249,7 @@
                     
                     <!-- Rechercher un logement -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('chambres.recherche') ? 'active' : ''); ?>" 
                            href="#">
                             <svg class="stroke-icon">
@@ -276,7 +276,7 @@
 
                     <!-- Mes Propriétaires -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('demarcheur.proprietaires') ? 'active' : ''); ?>" 
                            href="<?php echo e(route('demarcheur.proprietaires')); ?>">
                             <svg class="stroke-icon">
@@ -297,7 +297,7 @@
 
                     <!-- Biens Gérés -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title <?php echo e(request()->routeIs('biens*') ? 'active' : ''); ?>" href="#">
                             <svg class="stroke-icon">
                                 <use href="<?php echo e(asset('assets/svg/icon-sprite.svg#stroke-home')); ?>"></use>
@@ -319,7 +319,7 @@
 
                     <!-- Contrats Gérés -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title <?php echo e(request()->routeIs('contrats*') ? 'active' : ''); ?>" href="#">
                             <svg class="stroke-icon">
                                 <use href="<?php echo e(asset('assets/svg/icon-sprite.svg#stroke-file-text')); ?>"></use>
@@ -341,7 +341,7 @@
 
                     <!-- Mes Commissions -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('demarcheur.commissions') ? 'active' : ''); ?>" 
                            href="#">
                             <svg class="stroke-icon">
@@ -365,7 +365,7 @@
                     </li>
 
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('paiements*') ? 'active' : ''); ?>" 
                            href="#">
                             <svg class="stroke-icon">
@@ -393,7 +393,7 @@
                     </li>
 
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('notifications*') ? 'active' : ''); ?>" 
                            href="#">
                             <svg class="stroke-icon">
@@ -419,7 +419,7 @@
 
                     <!-- Mon Profil -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('profil*') ? 'active' : ''); ?>" 
                            href="<?php echo e(route('profil.index')); ?>">
                             <svg class="stroke-icon">
@@ -434,7 +434,7 @@
 
                     <!-- Paramètres -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('parametres*') ? 'active' : ''); ?>" 
                            href="#">
                             <svg class="stroke-icon">
@@ -449,7 +449,7 @@
 
                     <!-- Aide & Support -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav <?php echo e(request()->routeIs('aide*') ? 'active' : ''); ?>" 
                            href="#">
                             <svg class="stroke-icon">
@@ -464,7 +464,7 @@
 
                     <!-- Déconnexion -->
                     <li class="sidebar-list">
-                        <i class="fa-solid fa-thumbtack"></i>
+                        
                         <a class="sidebar-link sidebar-title link-nav" 
                            href="#"
                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
