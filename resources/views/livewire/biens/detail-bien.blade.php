@@ -339,6 +339,72 @@
     </div>
 
     <div class="container-fluid">
+        <div class="card"> 
+            <div class="card-body main-title-box">
+                <div class="common-space gap-2">
+                    <h6 class="f-light">The latest shopping trends and timeless essentials are waiting for you</h6>
+                    <div class="e-common-button"><a class="btn btn-primary" href="add-products.html" target="_blank"> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>Add Product</a><a class="btn btn-primary" href="order-history.html" target="_blank">View Orders</a></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xl-3 col-hr-6 col-sm-6">
+                <div class="card widget-11 widget-hover">
+                    <div class="card-body">
+                        <div class="common-align justify-content-start">
+                            <div class="analytics-tread bg-light-primary"><svg class="fill-primary">
+                                    <use href="{{ asset('assets/svg/icon-sprite.svg#analytics-user') }}"></use>
+                                </svg></div>
+                            <div> <span class="c-o-light">Total Employees</span>
+                                <h4 class="counter" data-target="356">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-hr-6 col-sm-6">
+                <div class="card widget-11 widget-hover">
+                    <div class="card-body">
+                        <div class="common-align justify-content-start">
+                            <div class="analytics-tread bg-light-secondary"><svg class="fill-secondary">
+                                    <use href="{{ asset('assets/svg/icon-sprite.svg#hire-candidate') }}"></use>
+                                </svg></div>
+                            <div> <span class="c-o-light">Hired Candidates</span>
+                                <h4 class="counter" data-target="100">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-hr-6 col-sm-6">
+                <div class="card widget-11 widget-hover">
+                    <div class="card-body">
+                        <div class="common-align justify-content-start">
+                            <div class="analytics-tread bg-light-warning"><svg class="fill-warning">
+                                    <use href="{{ asset('assets/svg/icon-sprite.svg#gross-salary') }}"></use>
+                                </svg></div>
+                            <div> <span class="c-o-light">Gross Salary</span>
+                                <h4 class="counter" data-target="562210">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-hr-6 col-sm-6">
+                <div class="card widget-11 widget-hover">
+                    <div class="card-body">
+                        <div class="common-align justify-content-start">
+                            <div class="analytics-tread bg-light-success"><svg class="fill-success">
+                                    <use href="{{ asset('assets/svg/icon-sprite.svg#new-employee') }}"></use>
+                                </svg></div>
+                            <div> <span class="c-o-light">New Employee</span>
+                                <h4 class="counter" data-target="70">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- En-tête du bien -->
         <div class="property-header">
             <div class="row align-items-center">
@@ -364,9 +430,11 @@
                     </div>
                 </div>
                 <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                    <a href="{{ route('biens.modifier', $bien->id) }}" class="btn btn-light btn-lg">
-                        <i class="fas fa-edit me-2"></i>Modifier
-                    </a>
+                    @if($canEdit)
+                        <a href="{{ route('biens.modifier', $bien->id) }}" class="btn btn-light btn-lg">
+                            <i class="fas fa-edit me-2"></i>Modifier
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -448,7 +516,7 @@
 
         <div class="row g-4">
             <!-- Colonne Principale -->
-            <div class="col-xl-8">
+            <div class="col-xl-12">
                 <!-- Description -->
                 @if($bien->description)
                     <div class="card mb-4">
@@ -482,9 +550,11 @@
                             <h5 class="mb-0">
                                 <i class="fas fa-bed me-2"></i>Chambres ({{ $bien->chambres->count() }})
                             </h5>
-                            <a href="{{ route('biens.chambres.creer', $bien->id) }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus me-2"></i>Ajouter
-                            </a>
+                            @if($canAddChambre)
+                                <a href="{{ route('biens.chambres.creer', $bien->id) }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-2"></i>Ajouter
+                                </a>
+                            @endif
                         </div>
                     </div>
                     <div class="card-body">
@@ -535,18 +605,24 @@
                                                     title="Voir">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="{{ route('biens.chambres.modifier', [$bien->id, $chambre->getKey()]) }}" 
-                                                    class="btn btn-outline-secondary"
-                                                    title="Modifier">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    <button type="button"
-                                                            wire:click="confirmDeleteChambre('{{ $chambre->getKey() }}')"
-                                                            class="btn btn-outline-danger" 
-                                                            title="Supprimer"
-                                                            @if($chambre->statut === 'loue') disabled @endif>
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
+                                                    
+                                                    @if($canEdit)
+                                                        <a href="{{ route('biens.chambres.modifier', [$bien->id, $chambre->getKey()]) }}" 
+                                                        class="btn btn-outline-secondary"
+                                                        title="Modifier">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                    @endif
+                                                    
+                                                    @if($canDeleteChambre)
+                                                        <button type="button"
+                                                                wire:click="confirmDeleteChambre('{{ $chambre->getKey() }}')"
+                                                                class="btn btn-outline-danger" 
+                                                                title="Supprimer"
+                                                                @if($chambre->statut === 'loue') disabled @endif>
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -679,6 +755,38 @@
                         </ul>
                     </div>
                 </div>
+
+                <!-- Créé par (si différent du propriétaire) -->
+                @if($bien->created_by_type && $bien->createdBy && $bien->created_by_user_id !== $bien->proprietaire->user_id)
+                    <div class="card mt-3">
+                        <div class="card-body">
+                            <h5 class="section-title">Créé par</h5>
+                            <div class="d-flex align-items-center">
+                                @if($bien->createdBy->profile_image_url)
+                                    <img src="{{ Storage::url($bien->createdBy->profile_image_url) }}" 
+                                        alt="{{ $bien->created_by_name }}"
+                                        class="rounded-circle me-3"
+                                        style="width: 40px; height: 40px; object-fit: cover;">
+                                @else
+                                    <div class="bg-light rounded-circle me-3 d-flex align-items-center justify-content-center"
+                                        style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-muted"></i>
+                                    </div>
+                                @endif
+                                <div>
+                                    <h6 class="mb-0">{{ $bien->created_by_name }}</h6>
+                                    <small class="badge 
+                                        @if($bien->created_by_type === 'admin') badge-danger
+                                        @elseif($bien->created_by_type === 'demarcheur') badge-warning
+                                        @else badge-success
+                                        @endif">
+                                        {{ $bien->created_by_role }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

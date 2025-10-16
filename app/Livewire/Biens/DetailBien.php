@@ -29,7 +29,8 @@ class DetailBien extends Component
             'proprietaire.user',
             'chambres' => function($query) {
                 $query->orderBy('nom_chambre');
-            }
+            },
+            'createdBy' // Ajouter la relation du créateur
         ])->findOrFail($this->bienId);
     }
 
@@ -55,9 +56,76 @@ class DetailBien extends Component
             return true;
         }
         
-        // Démarcheur a accès aux biens qui lui sont associés
+        // Démarcheur a accès aux biens des propriétaires qu'il gère
         if ($user->isDemarcheur() && $user->demarcheur) {
-            return $user->demarcheur->biens()->where('bien_immobiliers.id', $bien->id)->exists();
+            // ✅ CORRECTION : Utiliser isAuthorizedFor au lieu de biens()
+            return $user->demarcheur->isAuthorizedFor($bien->proprietaire_id);
+        }
+        
+        return false;
+    }
+
+    /**
+     * Vérifier si l'utilisateur peut modifier le bien
+     */
+    private function canEditBien($bien)
+    {
+        $user = Auth::user();
+        
+        if ($user->isAdmin()) {
+            return true;
+        }
+        
+        if ($user->isProprietaire() && $bien->proprietaire->user_id === $user->id) {
+            return true;
+        }
+        
+        if ($user->isDemarcheur()) {
+            return $user->demarcheur->hasPermissionFor($bien->proprietaire_id, 'modifier_bien');
+        }
+        
+        return false;
+    }
+
+    /**
+     * Vérifier si l'utilisateur peut supprimer une chambre
+     */
+    private function canDeleteChambre($bien)
+    {
+        $user = Auth::user();
+        
+        if ($user->isAdmin()) {
+            return true;
+        }
+        
+        if ($user->isProprietaire() && $bien->proprietaire->user_id === $user->id) {
+            return true;
+        }
+        
+        if ($user->isDemarcheur()) {
+            return $user->demarcheur->hasPermissionFor($bien->proprietaire_id, 'supprimer_bien');
+        }
+        
+        return false;
+    }
+
+    /**
+     * Vérifier si l'utilisateur peut ajouter une chambre
+     */
+    private function canAddChambre($bien)
+    {
+        $user = Auth::user();
+        
+        if ($user->isAdmin()) {
+            return true;
+        }
+        
+        if ($user->isProprietaire() && $bien->proprietaire->user_id === $user->id) {
+            return true;
+        }
+        
+        if ($user->isDemarcheur()) {
+            return $user->demarcheur->hasPermissionFor($bien->proprietaire_id, 'creer_chambre');
         }
         
         return false;
@@ -75,6 +143,12 @@ class DetailBien extends Component
         // Vérifier l'accès au bien
         if (!$this->hasAccessToBien($chambre->bien)) {
             session()->flash('error', 'Accès non autorisé.');
+            return;
+        }
+
+        // Vérifier la permission de suppression
+        if (!$this->canDeleteChambre($chambre->bien)) {
+            session()->flash('error', 'Vous n\'avez pas la permission de supprimer des chambres pour ce bien.');
             return;
         }
 
@@ -104,6 +178,14 @@ class DetailBien extends Component
             // Vérification finale de l'accès
             if (!$this->hasAccessToBien($chambre->bien)) {
                 session()->flash('error', 'Accès non autorisé.');
+                $this->showDeleteModal = false;
+                DB::rollBack();
+                return;
+            }
+
+            // Vérifier la permission
+            if (!$this->canDeleteChambre($chambre->bien)) {
+                session()->flash('error', 'Vous n\'avez pas la permission de supprimer des chambres pour ce bien.');
                 $this->showDeleteModal = false;
                 DB::rollBack();
                 return;
@@ -145,7 +227,7 @@ class DetailBien extends Component
                 \App\Models\Notification::create([
                     'user_id' => $proprietaireId,
                     'titre' => 'Chambre supprimée',
-                    'message' => "La chambre '{$nomChambre}' de votre bien a été supprimée par " . $user->full_name . ".",
+                    'message' => "La chambre '{$nomChambre}' de votre bien a été supprimée par " . $user->name . ".",
                     'type' => 'systeme',
                     'reference_id' => $this->bienId,
                     'reference_type' => 'bien_immobilier',
@@ -165,20 +247,33 @@ class DetailBien extends Component
             DB::rollBack();
             session()->flash('error', 'Erreur lors de la suppression : ' . $e->getMessage());
             $this->showDeleteModal = false;
+            logger()->error('Erreur suppression chambre', [
+                'error' => $e->getMessage(),
+                'chambre_id' => $this->chambreToDelete
+            ]);
         }
     }
 
     public function render()
     {
         $bien = $this->bien;
+        // dd($bien);
         
         // Vérifier l'accès au bien
         if (!$this->hasAccessToBien($bien)) {
             abort(403, 'Vous n\'avez pas accès à ce bien immobilier.');
         }
 
+        // Passer les permissions à la vue
+        $canEdit = $this->canEditBien($bien);
+        $canAddChambre = $this->canAddChambre($bien);
+        $canDeleteChambre = $this->canDeleteChambre($bien);
+
         return view('livewire.biens.detail-bien', [
-            'bien' => $bien
+            'bien' => $bien,
+            'canEdit' => $canEdit,
+            'canAddChambre' => $canAddChambre,
+            'canDeleteChambre' => $canDeleteChambre,
         ])
             ->layout('layouts.app')
             ->title($bien->titre . ' - Wassou');

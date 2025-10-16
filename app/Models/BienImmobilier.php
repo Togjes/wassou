@@ -17,7 +17,7 @@ class BienImmobilier extends Model
 
     protected $fillable = [
         'proprietaire_id',
-        'reference', // AJOUT
+        'reference',
         'titre',
         'description',
         'type_bien',
@@ -31,6 +31,8 @@ class BienImmobilier extends Model
         'moyens_paiement_acceptes',
         'details_paiement',
         'statut',
+        'created_by_user_id',
+        'created_by_type',
     ];
 
     protected $casts = [
@@ -49,38 +51,27 @@ class BienImmobilier extends Model
         parent::boot();
 
         static::creating(function ($model) {
-            // Générer UUID
             if (empty($model->{$model->getKeyName()})) {
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
             
-            // Générer référence si absente
             if (empty($model->reference)) {
                 $model->reference = self::generateReference($model->proprietaire_id);
             }
         });
     }
 
-    /**
-     * Générer une référence unique pour le bien
-     * Format: BIEN-PROPXXX-001
-     */
     public static function generateReference($proprietaireId)
     {
-        // Obtenir le propriétaire
         $proprietaire = \App\Models\Proprietaire::find($proprietaireId);
         if (!$proprietaire) {
             return 'BIEN-' . strtoupper(Str::random(8));
         }
 
-        // Compter les biens du propriétaire
         $count = self::where('proprietaire_id', $proprietaireId)->count() + 1;
-        
-        // Créer la référence : BIEN-{6 premiers caractères du propriétaire ID}-{numéro}
         $propPrefix = strtoupper(substr($proprietaire->id, 0, 6));
         $reference = 'BIEN-' . $propPrefix . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
         
-        // Vérifier l'unicité
         while (self::where('reference', $reference)->exists()) {
             $count++;
             $reference = 'BIEN-' . $propPrefix . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
@@ -89,6 +80,7 @@ class BienImmobilier extends Model
         return $reference;
     }
 
+    // Relations
     public function proprietaire()
     {
         return $this->belongsTo(\App\Models\Proprietaire::class, 'proprietaire_id');
@@ -99,6 +91,12 @@ class BienImmobilier extends Model
         return $this->hasMany(\App\Models\Chambre::class, 'bien_id');
     }
 
+    public function createdBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by_user_id');
+    }
+
+    // Accesseurs
     public function getTauxOccupationAttribute()
     {
         $totalChambres = $this->chambres->count();
@@ -111,6 +109,28 @@ class BienImmobilier extends Model
     public function getChambresLoueesAttribute()
     {
         return $this->chambres->where('statut', 'loue')->count();
+    }
+
+    public function getCreatedByNameAttribute()
+    {
+        if (!$this->createdBy) {
+            return 'Système';
+        }
+        return $this->createdBy->name;
+    }
+
+    public function getCreatedByRoleAttribute()
+    {
+        if (!$this->created_by_type) {
+            return null;
+        }
+        
+        return match($this->created_by_type) {
+            'admin' => 'Administrateur',
+            'proprietaire' => 'Propriétaire',
+            'demarcheur' => 'Démarcheur',
+            default => 'Système',
+        };
     }
 
     public function canBeDeleted()

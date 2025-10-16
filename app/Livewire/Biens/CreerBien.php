@@ -361,17 +361,25 @@ class CreerBien extends Component
             if ($this->isEdit) {
                 $bien = BienImmobilier::findOrFail($this->bienId);
                 
+                // Supprimer les photos marquées pour suppression
                 foreach ($this->photos_to_delete as $photoPath) {
                     Storage::disk('public')->delete($photoPath);
                 }
 
                 $allPhotos = $this->existing_photos;
             } else {
+                // CRÉATION D'UN NOUVEAU BIEN
                 $bien = new BienImmobilier();
                 $bien->proprietaire_id = $this->proprietaire_selectionne->id;
+                
+                // ✅ AJOUT : Enregistrer qui a créé le bien
+                $bien->created_by_user_id = $user->id;
+                $bien->created_by_type = $user->user_type;
+                
                 $allPhotos = [];
             }
 
+            // Upload des nouvelles photos
             if (!empty($this->photos_generales)) {
                 foreach ($this->photos_generales as $photo) {
                     if ($photo) {
@@ -381,6 +389,7 @@ class CreerBien extends Component
                 }
             }
 
+            // Upload des documents
             $documentsUrls = $this->isEdit ? ($bien->documents ?? []) : [];
             if (!empty($this->documents)) {
                 foreach ($this->documents as $document) {
@@ -394,6 +403,12 @@ class CreerBien extends Component
                 }
             }
 
+            // Générer le titre automatiquement si vide
+            if (empty($bien->titre)) {
+                $bien->titre = ucfirst($this->type_bien) . ' à ' . $this->ville . ' - ' . $this->quartier;
+            }
+
+            // Assigner toutes les propriétés
             $bien->description = $this->description;
             $bien->type_bien = $this->type_bien;
             $bien->ville = $this->ville;
@@ -410,23 +425,40 @@ class CreerBien extends Component
             $bien->save();
 
             // Notification pour le propriétaire
-            \App\Models\Notification::create([
-                'user_id' => $this->proprietaire_selectionne->user_id,
-                'titre' => $this->isEdit ? 'Bien immobilier modifié' : 'Bien immobilier créé',
-                'message' => $this->isEdit 
-                    ? "Votre bien '{$bien->titre}' a été modifié avec succès."
-                    : "Un nouveau bien '{$bien->titre}' a été créé pour vous par " . $user->name . ".",
-                'type' => 'systeme',
-                'reference_id' => $bien->id,
-                'reference_type' => 'bien_immobilier',
-            ]);
+            if ($this->isEdit) {
+                // Notification de modification
+                \App\Models\Notification::create([
+                    'user_id' => $this->proprietaire_selectionne->user_id,
+                    'titre' => 'Bien immobilier modifié',
+                    'message' => $user->id === $this->proprietaire_selectionne->user_id
+                        ? "Vous avez modifié le bien '{$bien->titre}'."
+                        : "{$user->name} a modifié votre bien '{$bien->titre}'.",
+                    'type' => 'systeme',
+                    'reference_id' => $bien->id,
+                    'reference_type' => 'bien_immobilier',
+                ]);
+            } else {
+                // Notification de création
+                \App\Models\Notification::create([
+                    'user_id' => $this->proprietaire_selectionne->user_id,
+                    'titre' => 'Bien immobilier créé',
+                    'message' => $user->id === $this->proprietaire_selectionne->user_id
+                        ? "Vous avez créé le bien '{$bien->titre}' avec succès."
+                        : "{$user->name} a créé le bien '{$bien->titre}' pour vous.",
+                    'type' => 'systeme',
+                    'reference_id' => $bien->id,
+                    'reference_type' => 'bien_immobilier',
+                ]);
+            }
 
-            // Notification pour l'admin/démarcheur si c'est lui qui a créé
-            if (($user->isAdmin() || $user->isDemarcheur()) && !$this->isEdit) {
+            // Notification pour l'admin/démarcheur si c'est lui qui a créé/modifié (et pas le propriétaire lui-même)
+            if ($user->id !== $this->proprietaire_selectionne->user_id) {
                 \App\Models\Notification::create([
                     'user_id' => $user->id,
-                    'titre' => 'Bien immobilier créé',
-                    'message' => "Vous avez créé le bien '{$bien->titre}' pour {$this->proprietaire_selectionne->user->name}.",
+                    'titre' => $this->isEdit ? 'Bien immobilier modifié' : 'Bien immobilier créé',
+                    'message' => $this->isEdit
+                        ? "Vous avez modifié le bien '{$bien->titre}' de {$this->proprietaire_selectionne->user->name}."
+                        : "Vous avez créé le bien '{$bien->titre}' pour {$this->proprietaire_selectionne->user->name}.",
                     'type' => 'systeme',
                     'reference_id' => $bien->id,
                     'reference_type' => 'bien_immobilier',
@@ -443,6 +475,15 @@ class CreerBien extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            // Log de l'erreur pour le débogage
+            logger()->error('Erreur lors de la sauvegarde du bien', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $user->id,
+                'proprietaire_id' => $this->proprietaire_selectionne->id ?? null,
+            ]);
+            
             session()->flash('error', 'Une erreur est survenue : ' . $e->getMessage());
         }
     }

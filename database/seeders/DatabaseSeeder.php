@@ -11,7 +11,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolePermissionSeeder::class,
             UserSeeder::class,
-            ProprietaireDemarcheurSeeder::class 
+            ProprietaireDemarcheurSeeder::class,
+            UpdateExistingBiensCreatorSeeder::class
         ]);
     }
 }

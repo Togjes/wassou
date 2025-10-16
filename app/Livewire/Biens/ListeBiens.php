@@ -17,14 +17,41 @@ class ListeBiens extends Component
     public $type_bien_filter = '';
     public $ville_filter = '';
     public $statut_filter = '';
+    public $proprietaire_filter = ''; // Pour l'admin
     
     // Pour la suppression
     public $bienToDelete = null;
     public $showDeleteModal = false;
 
-    protected $queryString = ['search', 'type_bien_filter', 'ville_filter', 'statut_filter'];
+    protected $queryString = [
+        'search', 
+        'type_bien_filter', 
+        'ville_filter', 
+        'statut_filter',
+        'proprietaire_filter'
+    ];
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingTypeBienFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingVilleFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingStatutFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingProprietaireFilter()
     {
         $this->resetPage();
     }
@@ -35,6 +62,7 @@ class ListeBiens extends Component
         $this->type_bien_filter = '';
         $this->ville_filter = '';
         $this->statut_filter = '';
+        $this->proprietaire_filter = '';
         $this->resetPage();
     }
 
@@ -50,7 +78,14 @@ class ListeBiens extends Component
         $user = Auth::user();
         
         // Vérifier les permissions
-        if (!$user->isAdmin() && $bien->proprietaire->user_id !== $user->id) {
+        if ($user->isDemarcheur()) {
+            $demarcheur = $user->demarcheur;
+            if (!$demarcheur->isAuthorizedFor($bien->proprietaire_id) || 
+                !$demarcheur->hasPermissionFor($bien->proprietaire_id, 'supprimer_bien')) {
+                session()->flash('error', 'Vous n\'avez pas la permission de supprimer ce bien.');
+                return;
+            }
+        } elseif ($user->isProprietaire() && $bien->proprietaire->user_id !== $user->id) {
             session()->flash('error', 'Vous n\'avez pas la permission de supprimer ce bien.');
             return;
         }
@@ -113,6 +148,16 @@ class ListeBiens extends Component
                 'type' => 'systeme',
             ]);
 
+            // Notifier le propriétaire si c'est un admin ou démarcheur qui supprime
+            if (($user->isAdmin() || $user->isDemarcheur()) && $bien->proprietaire->user_id !== $user->id) {
+                \App\Models\Notification::create([
+                    'user_id' => $bien->proprietaire->user_id,
+                    'titre' => 'Bien supprimé',
+                    'message' => "{$user->name} a supprimé votre bien '{$titreBien}'.",
+                    'type' => 'systeme',
+                ]);
+            }
+
             DB::commit();
 
             session()->flash('success', "Le bien '{$titreBien}' a été supprimé avec succès.");
@@ -130,19 +175,27 @@ class ListeBiens extends Component
     {
         $user = Auth::user();
         
-        $query = BienImmobilier::with(['proprietaire.user', 'chambres']);
+        $query = BienImmobilier::with(['proprietaire.user', 'chambres', 'createdBy']);
 
-        // Si propriétaire, afficher uniquement ses biens
+        // Filtrage selon le rôle
         if ($user->isProprietaire()) {
+            // Propriétaire : voir uniquement ses biens
             $query->where('proprietaire_id', $user->proprietaire->id);
+        } elseif ($user->isDemarcheur()) {
+            // Démarcheur : voir les biens des propriétaires qu'il gère
+            $demarcheur = $user->demarcheur;
+            $proprietaireIds = $demarcheur->proprietairesActifs()->pluck('proprietaires.id');
+            $query->whereIn('proprietaire_id', $proprietaireIds);
         }
+        // Admin : voir tous les biens (pas de filtre)
 
-        // Filtres
+        // Filtres de recherche
         if ($this->search) {
             $query->where(function($q) {
                 $q->where('titre', 'like', '%' . $this->search . '%')
                   ->orWhere('ville', 'like', '%' . $this->search . '%')
-                  ->orWhere('quartier', 'like', '%' . $this->search . '%');
+                  ->orWhere('quartier', 'like', '%' . $this->search . '%')
+                  ->orWhere('reference', 'like', '%' . $this->search . '%');
             });
         }
 
@@ -158,14 +211,43 @@ class ListeBiens extends Component
             $query->where('statut', $this->statut_filter);
         }
 
+        // Filtre par propriétaire (Admin uniquement)
+        if ($user->isAdmin() && $this->proprietaire_filter) {
+            $query->where('proprietaire_id', $this->proprietaire_filter);
+        }
+
         $biens = $query->latest()->paginate(10);
 
         // Récupérer les villes uniques pour le filtre
-        $villes = BienImmobilier::distinct()->pluck('ville');
+        $villesQuery = BienImmobilier::query();
+        if ($user->isProprietaire()) {
+            $villesQuery->where('proprietaire_id', $user->proprietaire->id);
+        } elseif ($user->isDemarcheur()) {
+            $demarcheur = $user->demarcheur;
+            $proprietaireIds = $demarcheur->proprietairesActifs()->pluck('proprietaires.id');
+            $villesQuery->whereIn('proprietaire_id', $proprietaireIds);
+        }
+        $villes = $villesQuery->distinct()->pluck('ville');
+
+        // Récupérer les propriétaires pour le filtre (Admin uniquement)
+        $proprietaires = collect();
+        if ($user->isAdmin()) {
+            $proprietaires = \App\Models\Proprietaire::with('user')
+                ->whereHas('biensImmobiliers')
+                ->get()
+                ->map(function($prop) {
+                    return [
+                        'id' => $prop->id,
+                        'name' => $prop->user->name,
+                        'code' => $prop->user->code_unique,
+                    ];
+                });
+        }
 
         return view('livewire.biens.liste-biens', [
             'biens' => $biens,
             'villes' => $villes,
+            'proprietaires' => $proprietaires,
         ])->layout('layouts.app')->title('Liste des Biens - Wassou');
     }
 }

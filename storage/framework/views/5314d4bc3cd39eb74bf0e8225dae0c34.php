@@ -75,7 +75,7 @@
 
         <?php if(session()->has('error')): ?>
             <div class="alert alert-danger alert-dismissible fade show">
-                <i class="fa-solid fa-alert-circle"></i>
+                <i class="fa-solid fa-exclamation-circle"></i>
                 <?php echo e(session('error')); ?>
 
                 <button class="btn-close" type="button" data-bs-dismiss="alert"></button>
@@ -111,17 +111,28 @@
                                     <span class="badge badge-light-dark"><?php echo e($chambre->nombre_pieces); ?> pièce(s)</span>
                                 </div>
                             </div>
-                            <div class="btn-group">
-                                <a href="<?php echo e(route('biens.chambres.modifier', [$bien->id, $chambre->id])); ?>" 
-                                   class="btn btn-primary btn-sm">
-                                    <i class="fa-solid fa-edit"></i> Modifier
-                                </a>
-                                <button wire:click="confirmDelete" 
-                                        class="btn btn-danger btn-sm"
-                                        <?php if($chambre->statut === 'loue'): ?> disabled title="Impossible de supprimer une chambre louée" <?php endif; ?>>
-                                    <i class="fa-solid fa-trash"></i> Supprimer
-                                </button>
-                            </div>
+                            
+                            <!--[if BLOCK]><![endif]--><?php if($canEdit || $canDelete): ?>
+                                <div class="btn-group">
+                                    <!--[if BLOCK]><![endif]--><?php if($canEdit): ?>
+                                        <a href="<?php echo e(route('biens.chambres.modifier', [$bien->id, $chambre->id])); ?>" 
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fa-solid fa-edit"></i> Modifier
+                                        </a>
+                                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                    
+                                    <!--[if BLOCK]><![endif]--><?php if($canDelete): ?>
+                                        <button wire:click="confirmDelete" 
+                                                class="btn btn-danger btn-sm"
+                                                <?php if($chambre->statut === 'loue'): ?> 
+                                                    disabled 
+                                                    title="Impossible de supprimer une chambre louée" 
+                                                <?php endif; ?>>
+                                            <i class="fa-solid fa-trash"></i> Supprimer
+                                        </button>
+                                    <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
+                                </div>
+                            <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
                         </div>
 
                         <!--[if BLOCK]><![endif]--><?php if($chambre->description): ?>
@@ -268,7 +279,7 @@
 
     <!-- Modal de Confirmation de Suppression -->
     <!--[if BLOCK]><![endif]--><?php if($showDeleteModal): ?>
-        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1050;">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header bg-danger text-white">

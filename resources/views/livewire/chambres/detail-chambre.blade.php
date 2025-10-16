@@ -74,7 +74,7 @@
 
         @if (session()->has('error'))
             <div class="alert alert-danger alert-dismissible fade show">
-                <i class="fa-solid fa-alert-circle"></i>
+                <i class="fa-solid fa-exclamation-circle"></i>
                 {{ session('error') }}
                 <button class="btn-close" type="button" data-bs-dismiss="alert"></button>
             </div>
@@ -108,17 +108,28 @@
                                     <span class="badge badge-light-dark">{{ $chambre->nombre_pieces }} pièce(s)</span>
                                 </div>
                             </div>
-                            <div class="btn-group">
-                                <a href="{{ route('biens.chambres.modifier', [$bien->id, $chambre->id]) }}" 
-                                   class="btn btn-primary btn-sm">
-                                    <i class="fa-solid fa-edit"></i> Modifier
-                                </a>
-                                <button wire:click="confirmDelete" 
-                                        class="btn btn-danger btn-sm"
-                                        @if($chambre->statut === 'loue') disabled title="Impossible de supprimer une chambre louée" @endif>
-                                    <i class="fa-solid fa-trash"></i> Supprimer
-                                </button>
-                            </div>
+                            
+                            @if($canEdit || $canDelete)
+                                <div class="btn-group">
+                                    @if($canEdit)
+                                        <a href="{{ route('biens.chambres.modifier', [$bien->id, $chambre->id]) }}" 
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fa-solid fa-edit"></i> Modifier
+                                        </a>
+                                    @endif
+                                    
+                                    @if($canDelete)
+                                        <button wire:click="confirmDelete" 
+                                                class="btn btn-danger btn-sm"
+                                                @if($chambre->statut === 'loue') 
+                                                    disabled 
+                                                    title="Impossible de supprimer une chambre louée" 
+                                                @endif>
+                                            <i class="fa-solid fa-trash"></i> Supprimer
+                                        </button>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
 
                         @if($chambre->description)
@@ -264,7 +275,7 @@
 
     <!-- Modal de Confirmation de Suppression -->
     @if($showDeleteModal)
-        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); z-index: 1050;">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header bg-danger text-white">
